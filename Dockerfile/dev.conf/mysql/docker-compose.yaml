@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  mysql-warung_api-db:
+    image: mariadb:10.6
+    container_name: mysql
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 3306:3306
+    env_file: 
+      - ../../env/dev/api.env
+    environment:
+      - MYSQL_DATABASE=MYSQL_DB
+      - MYSQL_USER=MYSQL_USER
+      - MYSQL_PASSWORD=MYSQL_PWD
+      - MYSQL_ROOT_PASSWORD=MYSQL_ROOT_PWD
+      - SERVICE_TAGS=dev
+      - SERVICE_NAME=mysql
+
