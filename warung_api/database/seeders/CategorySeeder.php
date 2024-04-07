@@ -15,22 +15,22 @@ class CategorySeeder extends Seeder
      */
     public function run()
     {
-      DB::table('categories')->insert([
+      DB::table('warungapi_categories')->insert([
         'name' => "Makanan & Minuman",
       ]);
-      DB::table('categories')->insert([
+      DB::table('warungapi_categories')->insert([
         'name' => "Sembako",
       ]);
-      DB::table('categories')->insert([
+      DB::table('warungapi_categories')->insert([
         'name' => "Alat Tulis",
       ]);
-      DB::table('categories')->insert([
+      DB::table('warungapi_categories')->insert([
         'name' => "Elektronik",
       ]);
-      DB::table('categories')->insert([
+      DB::table('warungapi_categories')->insert([
         'name' => "Paket Data",
       ]);
-      DB::table('categories')->insert([
+      DB::table('warungapi_categories')->insert([
         'name' => "Lain-Lain",
       ]);
     }

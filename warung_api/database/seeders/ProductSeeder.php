@@ -15,14 +15,14 @@ class ProductSeeder extends Seeder
      */
     public function run()
     {
-      DB::table('products')->insert([
+      DB::table('warungapi_products')->insert([
         'name' => "Teh Gelas cup",
         'categoryId' => 1,
         'price' => 1000,
         'quantity' => 24,
         'status' => 0
       ]);
-      DB::table('products')->insert([
+      DB::table('warungapi_products')->insert([
         'name' => "Head & Shoulder sacet",
         'categoryId' => 2,
         'price' => 1000,

@@ -9,6 +9,8 @@ class Role extends Model
 {
     use HasFactory;
 
+    protected $table = 'warungapi_roles';
+
     protected $fillable = ['desc'];
 
     public function users()

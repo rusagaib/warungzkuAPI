@@ -15,15 +15,8 @@ class ProductsCollection extends ResourceCollection
      */
     public function toArray($request)
     {
-         return parent::toArray($request);
-      // return ['data' => $this->collection];
+      return parent::toArray($request);
     }
-
-   // public function withResponse($request, $response){
-   //   $response->header('x-value', 'jmbot');
-   // }
-    //
-
 
     public function paginationInformation($request){
 

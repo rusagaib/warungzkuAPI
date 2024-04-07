@@ -13,10 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->unsignedBigInteger('roleId')->nullable();
-            $table->boolean('status')->default(1);
-            $table->foreign('roleId')->references('id')->on('roles');
+        Schema::create('warungapi_roles', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->timestamps();
         });
     }
 
@@ -27,8 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('roleId');
-        });
+        Schema::dropIfExists('warungapi_roles');
     }
 };

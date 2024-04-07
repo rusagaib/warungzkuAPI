@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Pegawai;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductsCollection;
 use App\Models\Product;
+use App\Services\Repository\Response\HTTPResponse;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -18,37 +19,13 @@ class ProductController extends Controller
      */
     public function index()
     {
-       //$products = Product::all();
-       //$products = Product::paginate(10);
-       //$products = new ProductsCollection(Product::paginate(4));
-
-       /*
-       $paginate = [
-         "total" => 40,
-         "per_page" => 8,
-         "current_page" => 1,
-         "last_page" => 5,
-         "first_page_url" => "http://127.0.0.1:8080/<ops-name>?page=1",
-         "last_page_url" => "http://127.0.0.1:8080/<ops-name>?page=5",
-         "next_page_url" => "http://127.0.0.1:8080/<ops-name>?page=2",
-         "prev_page_url" => null
-       ];
-        */
-
-
-      /*
-       $response = [
-         'status' => [
-           'code' => "200",
-           'message' => "OK",
-         ],
-         'data' => $products
-       ];
-      */
-
       //return response()->json($response, 200);
-      return new ProductsCollection(Product::paginate(2), 200);
+      // return new ProductsCollection(Product::paginate(2), 200);
+      $product = Product::paginate(25);
+    
+      $response = HTTPResponse::result($status=(object)['status'=>200], $product);
 
+      return response()->json($response, $response['code']);
     }
 
     /**
@@ -69,37 +46,23 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-          'name' => ['required', 'string'],
-          'categoryId' => ['required', 'string'],
-          'price' => ['required', 'string'],
-          'status' => ['required', 'string'],
-        ]);
+      $fields = $request->validate([
+        "name" => "required|string",
+        "categoryId" => "required|string",
+        "price" => "required|string",
+        "status" => "required|string"
+      ]);
 
-        if ($validator->fails()) {
-          return response()->json($validator->errors(),
-          422);
-        }
+      $product = Product::create([
+        'name' => $request['name'],
+        'categoryId' => (int) $request['categoryId'],
+        'price' => (int) $request['price'],
+        'status' => (int) $request['status'],
+      ]);
 
-        try {
-          $product = Product::create([
-            'name' => $request['name'],
-            'categoryId' => (int) $request['categoryId'],
-            'price' => (int) $request['price'],
-            'status' => (int) $request['status'],
-          ]);
-          $response = [
-            'massage' => 'Product Created!',
-            'data' => $product
-          ];
+      $response = HTTPResponse::result($status=(object)['status' => 201], $product);
 
-          return response()->json($response, 201);
-
-        } catch (QueryException $e) {
-            return response()->json([
-                'massage' => 'Failed' . $e->errorInfo
-            ]);
-        }
+      return response()->json($response, $response['code']);
     }
 
     /**
@@ -111,18 +74,23 @@ class ProductController extends Controller
     public function show(Product $product)
     {
       $product = Product::find($product)->first();
-      try {
-        $response = [
-            'massage' => 'Product Found!',
-            'data' => $product
-        ];
-        return response()->json($response, 200);
+
+      if($product)
+      {
+        $response = HTTPResponse::result(
+          $status=(object)['status' => 200], 
+          $product
+        );
       }
-      catch (QueryException $e) {
-        return response()->json([
-          'massage' => 'Failed' . $e->errorInfo
-        ]);
+      else
+      {
+        $response = HTTPResponse::error(
+          $status=(object)['status' => 404], 
+          $message="Product's Not Found!"
+        );
       }
+
+      return response()->json($response, $response['code']);
     }
 
     /**
@@ -145,35 +113,33 @@ class ProductController extends Controller
      */
     public function update(Request $request, $id)
     {
+      $fields = $request->validate([
+        "name" => "required|string",
+        "categoryId" => "required|string",
+        "price" => "required|string",
+        "status" => "required|string",
+      ]);
 
-        $product = Product::findOrFail($id);
-        $validator = Validator::make($request->all(), [
-          'name' => ['required', 'string'],
-          'categoryId' => ['required', 'string'],
-          'price' => ['required', 'string'],
-          'status' => ['required', 'string'],
-        ]);
+      $product = Product::find($id);
 
-        if ($validator->fails()) {
-          return response()->json($validator->errors(),
-          422);
-        }
+      if($product)
+      {
+        $product->update($request->all());
 
-        try {
-          $product->update($request->all());
-          $response = [
-            'massage' => 'Barang Updated!',
-            'data' => $product
-          ];
+        $response = HTTPResponse::result(
+          $status=(object)['status'=>200], 
+          $product
+        );  
+      }
+      else 
+      {
+        $response = HTTPResponse::error(
+          $status=(object)['status'=>404], 
+          $message="Product's Not Found!"
+        );  
+      }
 
-          return response()->json($response, 200);
-
-        } catch (QueryException $e) {
-            return response()->json([
-                'massage' => 'Failed' . $e->errorInfo
-            ]);
-        }
-        //
+      return response()->json($response, $response['code']);
     }
 
     /**

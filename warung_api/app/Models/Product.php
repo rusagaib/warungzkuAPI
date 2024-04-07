@@ -9,6 +9,8 @@ class Product extends Model
 {
     use HasFactory;
 
+    protected $table = 'warungapi_products';
+
     protected $fillable = [
         'name',
         'categoryId',

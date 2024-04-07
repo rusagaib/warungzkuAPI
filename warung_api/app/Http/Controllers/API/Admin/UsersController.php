@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
+use App\Services\Repository\Response\HTTPResponse;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -20,51 +21,28 @@ class UsersController extends Controller
     {
       $users = User::all();
 
-      $response = [
-        'status' => [
-          'code' => "200",
-          'message' => "OK",
-        ],
-        'data' => $users,
-      ];
+      $response = HTTPResponse::result($status=(object)['status'=>200], $users);
 
-      return response()->json($response, 200);
+      return response()->json($response, $response['code']);
     }
 
     public function store(Request $request)
     {
-
-      $validator = Validator::make($request->all(), [
-        'name' => ['required'],
-        'email' => ['required', 'unique:users,email'],
-        'password' => ['required'],
+      $validator = $request->validate([
+        "name" => "required",
+        "email" => "required|unique:users,email",
+        "password" => "required",
       ]);
 
-      if ($validator->fails()) {
-        return response()->json($validator->errors(),
-        422);
-      }
+      $user = User::create([
+        'name' => $request['name'],
+        'email' => $request['email'],
+        'password' => bcrypt($request['password'])
+      ]);
 
-      try {
-        $user = User::create([
-          'name' => $request['name'],
-          'email' => $request['email'],
-          'password' => bcrypt($request['password'])
-        ]);
+      $response = HTTPResponse::result($status=(object)['status'=>201], $user);
 
-        $response = [
-          'massage' => 'User Created!',
-          'data' => $user
-        ];
-
-        return response()->json($response, 201);
-
-      } catch (QueryException $e) {
-          return response()->json([
-              'massage' => 'Failed' . $e->errorInfo
-          ]);
-      }
-
+      return response()->json($response, $response['code']);
     }
 
 
@@ -94,38 +72,34 @@ class UsersController extends Controller
     //public function update(Request $request, User $user)
     public function update(Request $request, $id)
     {
-
-      $user = User::findOrFail($id);
-
-      $validator = Validator::make($request->all(), [
-        'name' => ['required'],
-        'email' => ['required', 'email'],
-        // 'password' => ['required'],
-        // 'address' => ['required'],
-        'roleId' => ['required', 'numeric'],
-        'status' => ['required', 'boolean'],
-        // 'qty' => ['required', 'in:IN,OUT'],
+      $fields = $request->validate([
+        "name" => "required",
+        "email" => "required|email",
+        // "password" => "required",
+        // "address" => "required",
+        "roleId" => "required|numeric",
+        "status" => "required|boolean"
       ]);
 
-      if ($validator->fails()) {
-        return response()->json($validator->errors(),
-        422);
+      $user = User::find($id);
+
+      if($user)
+      {
+        $user->update([
+          "name" => $fields['name'],
+          "email" => $fields['email'],
+          "roleId" => $fields['roleId'],
+          "status" => $fields['status']
+        ]);
+  
+        $response = HTTPResponse::result($status=(object)['status'=>200], $user);
+      }
+      else
+      {
+        $response = HTTPResponse::error($status=(object)['status'=>404], $message="User's Not Found!");
       }
 
-      try {
-        $user->update($request->all());
-        $response = [
-          'massage' => 'User Updated!',
-          'data' => $user
-        ];
-
-        return response()->json($response, 200);
-
-      } catch (QueryException $e) {
-          return response()->json([
-              'massage' => 'Failed' . $e->errorInfo
-          ]);
-      }
+      return response()->json($response, $response["code"]);
     }
 
     /**

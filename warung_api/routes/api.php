@@ -4,6 +4,7 @@ use App\Http\Controllers\API\ApiAuth\AuthController as AuthController;
 use App\Http\Controllers\API\Admin\UsersController;
 use App\Http\Controllers\API\Pegawai\CategoryController;
 use App\Http\Controllers\API\Pegawai\ProductController;
+use App\Services\Repository\Response\HTTPResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,11 +21,23 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix'=>'v1'], function(){
 
-  Route::post('/auth/login', [AuthController::class, 'login'])->name('login');
+  Route::middleware('throttle:60,1')->get('/testcon', function(){
+    $response = HTTPResponse::result(
+      $status=(object)['status'=>200],
+      $data=(object)["message" => "test connection OK!"]
+    );
+    return response()->json($response, $response['code']);
+  })->name('api.test');
+
+  Route::middleware('throttle:30,1')->post('/auth/login', [AuthController::class, 'login'])->name('login');
 
   // protected route 3 use prefix
-  Route::group(
-    ['middleware' => ['auth:sanctum']], function () {
+  Route::group([
+    'middleware' => [
+        'auth:sanctum', 
+        'throttle:60,1'
+      ]
+    ], function () {
 
       Route::group([
           'prefix' => 'admin',
@@ -51,35 +64,11 @@ Route::group(['prefix'=>'v1'], function(){
       });
 
 
-
-      Route::get('/user/info', [AuthController::class, 'info']);
-      Route::post('/auth/logout', [AuthController::class, 'logout']);
+      Route::middleware('throttle:30,1')->get('/user/info', [AuthController::class, 'info']);
+      Route::middleware('throttle:30,1')->post('/auth/logout', [AuthController::class, 'logout']);
 
   /*end middleware auth*/
   });
 
   /*end v1*/
 });
-
-
-
-/*
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
- */
-
-/*
-Route::get('/test', function(){
-
-    return response()->json(
-      [
-        'status' => [ 'code' => 0, 'message' => "succesfull" ],
-        'data' => array(
-          ['desc' => "this is example data 1"],
-          ['desc' => "this is example data 2"]
-        ),
-        'paginate' => ['total-page'=>2, 'current-page'=>1, 'next-page'=>2]
-      ], 200);
-});
-*/

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\ApiAuth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Repository\Response\HTTPResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -11,7 +12,6 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-
       $request->validate([
           'email' => ['required'],
           'password' => ['required'],
@@ -20,36 +20,44 @@ class AuthController extends Controller
       $user = User::where('email', $request->email)->first();
 
       if (!$user || !Hash::check($request->password, $user->password)){
-        return response()->json([
-          'massage' => 'Email or Password Not Valid!'
-        ], 422);
+        $response = HTTPResponse::error(
+          $status=(object)['status'=>422], 
+          $message="Email or Password Not Valid!"
+        );
+        return response()->json($response, $response['code']);
       }
 
       $token = $user->createToken('auth-token')->plainTextToken;
 
-      $response = [
-        'massage' => 'successful',
-        'token' => $token
-      ];
+      $response = HTTPResponse::result(
+        $status=(object)['status'=>202], 
+        $data=(object)['token'=>$token]
+      );
 
-      return response()->json($response, 200);
+      return response()->json($response, $response['code']);
     }
+
 
     public function info(Request $request)
     {
-        return response()->json([
-          'massage' => 'User Info',
-          'data' => $request->user()
-        ]);
+      $response = HTTPResponse::result(
+        $status=(object)['status'=>200], 
+        $request->user()
+      );
+
+      return response()->json($response, $response['code']);
     }
+
 
     public function logout(Request $request)
     {
-        // $user->tokens()->delete();
-        $request->user()->currentAccessToken()->delete();
+      $request->user()->currentAccessToken()->delete();
 
-        return [
-            'message' => 'Tokens Revoked'
-        ];
+      $response = HTTPResponse::result(
+        $status=(object)['status'=>200], 
+        $data=['message' => 'Tokens Revoked']
+      );
+
+      return response()->json($response, $response['code']);
     }
 }

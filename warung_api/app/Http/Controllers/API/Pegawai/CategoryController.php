@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\Pegawai;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Services\Repository\Response\HTTPResponse;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Request as FacadesRequest;
@@ -18,18 +19,14 @@ class CategoryController extends Controller
      */
     public function index()
     {
-       $category = Category::all();
+      $category = Category::all();
 
-       $response = [
-         'status' => [
-           'code' => "200",
-           'message' => "OK",
-         ],
-         'data' => $category,
-       ];
+      $response = HTTPResponse::result(
+        $status=(object)['status' => 200], 
+        $category
+      );
 
-      return response()->json($response, 200);
-   //
+      return response()->json($response, $response['code']);
     }
 
     /**
@@ -50,30 +47,18 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
+      $fields = $request->validate([
+        "name" => "required"
+      ]);
 
-        $validator = Validator::make($request->all(), [
-          'name' => ['required'],
-        ]);
+      $kategori = Category::create($fields["name"]);
 
-        if ($validator->fails()) {
-          return response()->json($validator->errors(),
-          422);
-        }
+      $response = HTTPResponse::result(
+        $status=(object)['status' => 201], 
+        $kategori
+      );
 
-        try {
-          $kategori = Category::create($request->all());
-          $response = [
-            'massage' => 'Category Created!',
-            'data' => $kategori
-          ];
-
-          return response()->json($response, 201);
-
-        } catch (QueryException $e) {
-            return response()->json([
-                'massage' => 'Failed' . $e->errorInfo
-            ]);
-        }
+      return response()->json($response, $response['code']);
     }
 
     /**
@@ -107,33 +92,30 @@ class CategoryController extends Controller
      */
     public function update(Request $request, $id)
     {
+      $fields = $request->validate([
+        "name" => "required"
+      ]);
 
-        $kategori = Category::findOrFail($id);
+      $kategori = Category::find($fields['name']);
 
-        $validator = Validator::make($request->all(), [
-          'name' => ['required'],
-          // 'qty' => ['required', 'in:IN,OUT'],
-        ]);
+      if($kategori)
+      {
+        $kategori->update($fields['name']);
 
-        if ($validator->fails()) {
-          return response()->json($validator->errors(),
-          422);
-        }
+        $response = HTTPResponse::result(
+          $status=(object)['status' => 200], 
+          $kategori
+        );
+      }
+      else 
+      {
+        $response = HTTPResponse::error(
+          $status=(object)['status' => 404], 
+          $message="Categories Not Found!!"
+        );
+      }
 
-        try {
-          $kategori->update($request->all());
-          $response = [
-            'massage' => 'kategori Updated!',
-            'data' => $kategori
-          ];
-
-          return response()->json($response, 200);
-
-        } catch (QueryException $e) {
-            return response()->json([
-                'massage' => 'Failed' . $e->errorInfo
-            ]);
-        }
+      return response()->json($response, $response['code']);
     }
 
     /**
@@ -144,20 +126,25 @@ class CategoryController extends Controller
      */
     public function destroy($id)
     {
-      $kategori = Category::findOrFail($id);
+      $kategori = Category::find($id);
 
-      try {
+      if($kategori)
+      {
         $kategori->delete();
-        $response = [
-          'massage' => 'kategori deleted!',
-        ];
 
-        return response()->json($response, 410);
-
-      } catch (QueryException $e) {
-          return response()->json([
-              'massage' => 'Failed' . $e->errorInfo
-          ]);
+        $response = HTTPResponse::result(
+          $status = (object)['status' => 410], 
+          $kategori
+        );
       }
+      else
+      {
+        $response = HTTPResponse::error(
+          $status = (object)['status' => 404], 
+          $message="Categories Not Found!"
+        );
+      }
+
+      return response()->json($response, $response['code']);
     }
 }

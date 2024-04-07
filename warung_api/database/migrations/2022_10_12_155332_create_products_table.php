@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('products', function (Blueprint $table) {
+        Schema::create('warungapi_products', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->unsignedBigInteger('categoryId')->nullable();
@@ -21,7 +21,7 @@ return new class extends Migration
             $table->integer('quantity')->nullable();
             $table->boolean('status')->default(0);
             $table->timestamps();
-            $table->foreign('categoryId')->references('id')->on('categories');
+            $table->foreign('categoryId')->references('id')->on('warungapi_categories');
         });
     }
 
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('products');
+        Schema::dropIfExists('warungapi_products');
     }
 };

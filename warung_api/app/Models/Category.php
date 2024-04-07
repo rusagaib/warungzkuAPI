@@ -9,6 +9,8 @@ class Category extends Model
 {
     use HasFactory;
 
+    protected $table = 'warungapi_categories';
+
     protected $fillable = ['name'];
 
     public function products()
